@@ -4,31 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CaptionX - Gemini Vision Web App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f6f8fa; margin: 0; padding: 0; }
-        .container { max-width: 440px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0002; padding: 2.5rem 2rem; }
-        h1 { text-align: center; color: #2563eb; margin-bottom: 1.5rem; }
-        form { display: flex; flex-direction: column; gap: 1rem; }
+        body { font-family: 'Inter', sans-serif; background: #f6f8fa; margin: 0; padding: 0; }
+        .container { max-width: 440px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px #0002; padding: 2.5rem 2rem; }
+        h1 { text-align: center; color: #2563eb; margin-bottom: 2rem; font-size: 2.1rem; letter-spacing: 0.5px; }
+        form { display: flex; flex-direction: column; gap: 1.2rem; }
         label[for="style"] { font-weight:600; color:#2563eb; margin-bottom:0.2rem; }
-        select[name="style"] { padding:0.5rem; border-radius:4px; border:1px solid #ddd; margin-bottom:0.5rem; }
-        input[type="file"] { border: 1px solid #ddd; padding: 0.5rem; border-radius: 4px; }
-        button { background: #2563eb; color: #fff; border: none; padding: 0.9rem; border-radius: 4px; font-size: 1.1rem; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; }
-        button:hover { background: #1d4ed8; }
+        select[name="style"] { padding:0.6rem; border-radius:6px; border:1px solid #d1d5db; margin-bottom:0.5rem; font-size:1rem; }
+        .drop-area {
+            border: 2px dashed #2563eb;
+            border-radius: 8px;
+            background: #f1f5f9;
+            padding: 1.2rem;
+            text-align: center;
+            color: #2563eb;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .drop-area.dragover {
+            background: #dbeafe;
+            border-color: #1d4ed8;
+        }
+        input[type="file"] { display: none; }
+        button { background: linear-gradient(90deg,#2563eb,#1d4ed8); color: #fff; border: none; padding: 1rem; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px #2563eb22; transition: background 0.2s; }
+        button:hover { background: linear-gradient(90deg,#1d4ed8,#2563eb); }
         .preview { display: flex; justify-content: center; margin-top: 1.5rem; }
-        .preview img { max-width: 100%; max-height: 240px; border-radius: 8px; box-shadow: 0 1px 6px #0002; }
+        .preview img { max-width: 100%; max-height: 240px; border-radius: 10px; box-shadow: 0 2px 12px #0002; }
         .caption-card {
             margin-top: 2.2rem;
             background: #f1f5f9;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px #0001;
-            padding: 1.5rem 1.2rem;
-            font-size: 1.25rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #2563eb11;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+            font-size: 1.22rem;
             color: #1e293b;
             text-align: center;
             border-left: 5px solid #2563eb;
             font-weight: 500;
             line-height: 1.6;
             letter-spacing: 0.01em;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.7s 0.1s forwards;
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: none; }
         }
         .caption-heading {
             color: #2563eb;
@@ -37,36 +59,112 @@
             margin-bottom: 0.7rem;
             letter-spacing: 0.5px;
         }
+        .copy-btn {
+            margin-top: 1rem;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1.1rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #1d4ed8; }
         .error { color: #b91c1c; background: #fee2e2; padding: 0.5rem; border-radius: 4px; margin-top: 1rem; text-align: center; }
+        @media (max-width: 600px) {
+            .container { padding: 1.2rem 0.5rem; }
+            h1 { font-size: 1.4rem; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🖼️ CaptionX</h1>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="caption-form">
             <label for="style">Caption style:</label>
             <select id="style" name="style" class="form-select">
                 <option value="single">Single line</option>
                 <option value="alt">Accessibility (alt text)</option>
                 <option value="instagram">Instagram caption</option>
             </select>
-            <input type="file" name="image" accept="image/*" required>
+            <div class="drop-area" id="drop-area">
+                <span id="drop-text">Drag & drop an image here, or <span style="text-decoration:underline;">browse</span></span>
+                <input type="file" name="image" id="file-input" accept="image/*" required>
+            </div>
             <button type="submit">Generate Caption</button>
         </form>
+        <div id="preview-container">
         {% if image_url %}
             <div class="preview">
-                <img src="{{ image_url }}" alt="Uploaded image preview">
+                <img src="{{ image_url }}" alt="Uploaded image preview" id="preview-img">
             </div>
         {% endif %}
+        </div>
         {% if caption %}
-            <div class="caption-card">
+            <div class="caption-card" id="caption-card">
                 <div class="caption-heading">Generated Caption</div>
-                {{ caption }}
+                <span id="caption-text">{{ caption }}</span>
+                <button class="copy-btn" onclick="copyCaption()">Copy</button>
             </div>
         {% endif %}
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
     </div>
+    <script>
+    // Drag and drop logic
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+    const dropText = document.getElementById('drop-text');
+    const previewContainer = document.getElementById('preview-container');
+
+    dropArea.addEventListener('click', () => fileInput.click());
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('dragover');
+    });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            showPreview(e.target.files[0]);
+        }
+    });
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            let img = document.getElementById('preview-img');
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'preview-img';
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'preview';
+                previewDiv.appendChild(img);
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(previewDiv);
+            }
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    // Copy to clipboard
+    function copyCaption() {
+        const text = document.getElementById('caption-text').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = 'Copied!';
+            setTimeout(() => { btn.innerText = 'Copy'; }, 1200);
+        });
+    }
+    </script>
 </body>
 </html> 
