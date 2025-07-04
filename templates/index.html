@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaptionX - Gemini Vision Web App</title>
+    <style>
+        body { font-family: sans-serif; background: #f6f8fa; margin: 0; padding: 0; }
+        .container { max-width: 440px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0002; padding: 2.5rem 2rem; }
+        h1 { text-align: center; color: #2563eb; margin-bottom: 1.5rem; }
+        form { display: flex; flex-direction: column; gap: 1rem; }
+        label[for="style"] { font-weight:600; color:#2563eb; margin-bottom:0.2rem; }
+        select[name="style"] { padding:0.5rem; border-radius:4px; border:1px solid #ddd; margin-bottom:0.5rem; }
+        input[type="file"] { border: 1px solid #ddd; padding: 0.5rem; border-radius: 4px; }
+        button { background: #2563eb; color: #fff; border: none; padding: 0.9rem; border-radius: 4px; font-size: 1.1rem; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; }
+        button:hover { background: #1d4ed8; }
+        .preview { display: flex; justify-content: center; margin-top: 1.5rem; }
+        .preview img { max-width: 100%; max-height: 240px; border-radius: 8px; box-shadow: 0 1px 6px #0002; }
+        .caption-card {
+            margin-top: 2.2rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px #0001;
+            padding: 1.5rem 1.2rem;
+            font-size: 1.25rem;
+            color: #1e293b;
+            text-align: center;
+            border-left: 5px solid #2563eb;
+            font-weight: 500;
+            line-height: 1.6;
+            letter-spacing: 0.01em;
+        }
+        .caption-heading {
+            color: #2563eb;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.7rem;
+            letter-spacing: 0.5px;
+        }
+        .error { color: #b91c1c; background: #fee2e2; padding: 0.5rem; border-radius: 4px; margin-top: 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ CaptionX</h1>
+        <form method="post" enctype="multipart/form-data">
+            <label for="style">Caption Style</label>
+            <select name="style" id="style" required>
+                <option value="detailed">Detailed</option>
+                <option value="single">Single line</option>
+                <option value="descriptive">Descriptive</option>
+                <option value="alt">Accessibility (alt text)</option>
+            </select>
+            <input type="file" name="image" accept="image/*" required>
+            <button type="submit">Generate Caption</button>
+        </form>
+        {% if image_url %}
+            <div class="preview">
+                <img src="{{ image_url }}" alt="Uploaded image preview">
+            </div>
+        {% endif %}
+        {% if caption %}
+            <div class="caption-card">
+                <div class="caption-heading">Generated Caption</div>
+                {{ caption }}
+            </div>
+        {% endif %}
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html> 
