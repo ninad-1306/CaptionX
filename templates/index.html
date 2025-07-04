@@ -44,12 +44,11 @@
     <div class="container">
         <h1>🖼️ CaptionX</h1>
         <form method="post" enctype="multipart/form-data">
-            <label for="style">Caption Style</label>
-            <select name="style" id="style" required>
-                <option value="detailed">Detailed</option>
+            <label for="style">Caption style:</label>
+            <select id="style" name="style" class="form-select">
                 <option value="single">Single line</option>
-                <option value="descriptive">Descriptive</option>
                 <option value="alt">Accessibility (alt text)</option>
+                <option value="instagram">Instagram caption</option>
             </select>
             <input type="file" name="image" accept="image/*" required>
             <button type="submit">Generate Caption</button>

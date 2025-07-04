@@ -4,13 +4,19 @@ import requests
 import base64
 import json
 from flask import Flask, render_template, request, url_for
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Gemini Vision API setup (updated to gemini-1.5-flash)
-GEMINI_API_KEY = GEMINIAPIKEY
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def get_gemini_caption(image_path, prompt="Describe this image in detail."):
@@ -60,18 +66,13 @@ def index():
                 image_url = url_for('uploaded_file', filename=unique_name)
                 try:
                     # Get style from form and build prompt
-                    style = request.form.get("style", "detailed")
-                    if style == "detailed":
-                        prompt = "Describe this image in detail."
-                    elif style == "single":
-                        prompt = "Write a concise, single-line caption for this image."
-                    elif style == "descriptive":
-                        prompt = "Write a descriptive caption for this image."
-                    elif style == "alt":
-                        prompt = (
-                            "Generate alt text for this image. "
-                            "Only output the alt text itself, with no preamble, explanation, or phrases like 'Alt text:' or 'Here is alt text'."
-                        )
+                    style = request.form.get('style', 'single')
+                    if style == 'single':
+                        prompt = "Describe this image in a single, concise sentence."
+                    elif style == 'alt':
+                        prompt = "Write alt text for this image for accessibility. Do not include any preamble, just the alt text."
+                    elif style == 'instagram':
+                        prompt = "Write a catchy Instagram caption for this image. Do not give multiple captions, just one. And no need for any here is your caption or anything like that."
                     else:
                         prompt = "Describe this image."
                     caption = get_gemini_caption(filepath, prompt=prompt)
