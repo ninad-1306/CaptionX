@@ -10,7 +10,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Gemini Vision API setup (updated to gemini-1.5-flash)
-GEMINI_API_KEY = "AIzaSyBmRYiY7gwShzBjsbaZOAXHB_2o5IcirwA"
+GEMINI_API_KEY = GEMINIAPIKEY
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 def get_gemini_caption(image_path, prompt="Describe this image in detail."):
